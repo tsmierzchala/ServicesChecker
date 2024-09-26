@@ -11,8 +11,14 @@
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10"/>
             <CheckBox x:Name="IsRestServiceCheckbox" Content="Is REST Service?" Margin="10,0,10,0" Width="115"/>
             <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="100" Margin="10"/>
-            <ListView x:Name="ServiceStatusListView" Margin="10" ItemsSource="{Binding ServiceStatuses}">
-                <ListView.View>
+            <ListView x:Name="ServiceStatusListView" Height="300" Margin="10" 
+                      ItemsSource="{Binding ServiceStatuses}">
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Delete" Click="DeleteMenuItem_Click"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                    <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name}" Width="200"/>
                         <GridViewColumn Header="Status">

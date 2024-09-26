@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.ServiceProcess;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using Newtonsoft.Json;
 
@@ -85,6 +86,15 @@ namespace ServicesChecker
             catch (Exception e)
             {
                 return $"Error: {e.Message}";
+            }
+        }
+        private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
+            {
+                serviceStatuses.Remove(selectedService);
+                SaveServiceStatuses();
             }
         }
         private bool ServiceExists(string serviceName)
