@@ -3,7 +3,6 @@ using System.IO;
 using System.Net.Http;
 using System.ServiceProcess;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Threading;
 using Newtonsoft.Json;
 
@@ -21,22 +20,66 @@ namespace ServicesChecker
             ServiceStatusListView.ItemsSource = serviceStatuses;
             StartServiceCheckTimer();
         }
-        private void AddServiceButton_Click(object sender, RoutedEventArgs e)
+        private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
             string serviceName = ServiceNameTextBox.Text;
-            bool isRestService = IsRestServiceCheckbox.IsChecked == true;
-
             if (!string.IsNullOrWhiteSpace(serviceName) && !ServiceExists(serviceName))
             {
-                serviceStatuses.Add(new ServiceStatus
+                if (CheckIfLocalServiceExists(serviceName))
                 {
-                    Name = serviceName,
-                    Status = "Checking...",
-                    IsRestService = isRestService
-                });
-                SaveServiceStatuses();
-                UpdateServiceStatuses();
+                    AddService(serviceName, false, "Local Service");
+                }
+                else if (await CheckIfRestServiceExists(serviceName))
+                {
+                    AddService(serviceName, true, "REST Service");
+                }
+                else
+                {
+                    MessageBox.Show("The specified service does not exist as either a local or REST service.", "Service Not Found", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
+            ServiceNameTextBox.Clear();
+        }
+        private bool CheckIfLocalServiceExists(string serviceName)
+        {
+            try
+            {
+                using (ServiceController serviceController = new ServiceController(serviceName))
+                {
+                    return serviceController.Status != ServiceControllerStatus.Stopped;
+                }
+            }
+            catch
+            {
+                return false; // Service does not exist
+            }
+        }
+        private async Task<bool> CheckIfRestServiceExists(string url)
+        {
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    var response = await client.GetAsync(url);
+                    return response.IsSuccessStatusCode;
+                }
+            }
+            catch
+            {
+                return false; // Address is not a valid REST service
+            }
+        }
+
+        private void AddService(string serviceName, bool isRestService, string status)
+        {
+            serviceStatuses.Add(new ServiceStatus
+            {
+                Name = serviceName,
+                Status = status,
+                IsRestService = isRestService
+            });
+            SaveServiceStatuses();
+            UpdateServiceStatuses();
         }
         private async void StartServiceCheckTimer()
         {
@@ -46,7 +89,8 @@ namespace ServicesChecker
         }
         private async Task UpdateServiceStatuses()
         {
-            foreach (var service in serviceStatuses)
+            var serviceStatusesCopy = serviceStatuses.ToList();
+            foreach (var service in serviceStatusesCopy)
             {
                 if (service.IsRestService)
                 {
