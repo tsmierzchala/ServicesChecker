@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
+using System.Net.Http;
 using System.ServiceProcess;
 using System.Windows;
 using System.Windows.Threading;
@@ -12,7 +13,6 @@ namespace ServicesChecker
         private ObservableCollection<ServiceStatus> serviceStatuses;
         private const string JsonFilePath = "services.json";
         private DispatcherTimer timer;
-
         public MainWindow()
         {
             InitializeComponent();
@@ -20,48 +20,45 @@ namespace ServicesChecker
             ServiceStatusListView.ItemsSource = serviceStatuses;
             StartServiceCheckTimer();
         }
-
         private void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
             string serviceName = ServiceNameTextBox.Text;
+            bool isRestService = IsRestServiceCheckbox.IsChecked == true;
+
             if (!string.IsNullOrWhiteSpace(serviceName) && !ServiceExists(serviceName))
             {
-                serviceStatuses.Add(new ServiceStatus { Name = serviceName, Status = "Checking..." });
+                serviceStatuses.Add(new ServiceStatus
+                {
+                    Name = serviceName,
+                    Status = "Checking...",
+                    IsRestService = isRestService
+                });
                 SaveServiceStatuses();
                 UpdateServiceStatuses();
             }
         }
-
-        private bool ServiceExists(string serviceName)
-        {
-            foreach (var service in serviceStatuses)
-            {
-                if (service.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private void StartServiceCheckTimer()
+        private async void StartServiceCheckTimer()
         {
             timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-            timer.Tick += (s, e) => UpdateServiceStatuses();
+            timer.Tick += async (s, e) => await UpdateServiceStatuses();
             timer.Start();
         }
-
-        private void UpdateServiceStatuses()
+        private async Task UpdateServiceStatuses()
         {
             foreach (var service in serviceStatuses)
             {
-                var status = CheckServiceStatus(service.Name);
-                service.Status = status;
+                if (service.IsRestService)
+                {
+                    service.Status = await CheckRestServiceStatus(service.Name);
+                }
+                else
+                {
+                    service.Status = CheckLocalServiceStatus(service.Name);
+                }
             }
             ServiceStatusListView.Items.Refresh();
         }
-
-        private string CheckServiceStatus(string serviceName)
+        private string CheckLocalServiceStatus(string serviceName)
         {
             try
             {
@@ -75,13 +72,37 @@ namespace ServicesChecker
                 return $"Error: {e.Message}";
             }
         }
-
+        private async Task<string> CheckRestServiceStatus(string url)
+        {
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    var response = await client.GetAsync(url);
+                    return response.IsSuccessStatusCode ? "Available" : "Unavailable";
+                }
+            }
+            catch (Exception e)
+            {
+                return $"Error: {e.Message}";
+            }
+        }
+        private bool ServiceExists(string serviceName)
+        {
+            foreach (var service in serviceStatuses)
+            {
+                if (service.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         private void SaveServiceStatuses()
         {
             var json = JsonConvert.SerializeObject(serviceStatuses);
             File.WriteAllText(JsonFilePath, json);
         }
-
         private ObservableCollection<ServiceStatus> LoadServiceStatuses()
         {
             if (File.Exists(JsonFilePath))
