@@ -10,7 +10,7 @@
         <StackPanel>
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10"/>
             <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="200" Margin="10"/>
-            <ListView x:Name="ServiceStatusListView" Height="300" Margin="10" 
+            <ListView x:Name="ServiceStatusListView" Margin="10" 
                       ItemsSource="{Binding ServiceStatuses}">
                 <ListView.ContextMenu>
                     <ContextMenu>
