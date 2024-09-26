@@ -11,6 +11,8 @@
             <ColumnDefinition Width="3*"/>
             <ColumnDefinition Width="37*"/>
         </Grid.ColumnDefinitions>
+        <TextBox x:Name="ServiceNameTextBox" Grid.Column="1" HorizontalAlignment="Left" Margin="30,81,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
+        <Button x:Name="CheckServiceButton" Grid.Column="1" Content="Button" HorizontalAlignment="Left" Margin="180,81,0,0" VerticalAlignment="Top" Width="90" Click="CheckServiceButton_Click"/>
 
     </Grid>
 </Window>
