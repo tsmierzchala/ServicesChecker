@@ -5,14 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ServicesChecker"
         mc:Ignorable="d"
-        Title="Services Checker" Height="450" Width="800">
+        Title="Services Checker" Height="400" Width="350">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="37*"/>
-        </Grid.ColumnDefinitions>
-        <TextBox x:Name="ServiceNameTextBox" Grid.Column="1" HorizontalAlignment="Left" Margin="30,81,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="120"/>
-        <Button x:Name="CheckServiceButton" Grid.Column="1" Content="Button" HorizontalAlignment="Left" Margin="180,81,0,0" VerticalAlignment="Top" Width="90" Click="CheckServiceButton_Click"/>
-
+        <StackPanel>
+            <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10"/>
+            <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="100" Margin="10"/>
+            <ListView x:Name="ServiceStatusListView" Margin="10" ItemsSource="{Binding ServiceStatuses}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name}" Width="200"/>
+                        <GridViewColumn Header="Status">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Ellipse Width="10" Height="10" Fill="{Binding StatusColor}" Margin="0,0,5,0"/>
+                                        <TextBlock Text="{Binding Status}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </StackPanel>
     </Grid>
 </Window>
