@@ -9,13 +9,30 @@ namespace ServicesChecker
         {
             if (value is string url)
             {
-                // Shorten URL to a maximum of 30 characters for display, you can customize this
-                int maxLength = 30;
-                if (url.Length > maxLength)
+                try
                 {
-                    return url.Substring(0, maxLength - 3) + "...";
+                    // Create a Uri instance to easily parse the URL
+                    var uri = new Uri(url);
+
+                    // Get the host and port part from the URI
+                    string hostPart = uri.IsDefaultPort ? uri.Host : $"{uri.Host}:{uri.Port}";
+
+                    // Split the path and take the last segment
+                    string[] segments = uri.Segments;
+                    string lastSegment = segments.LastOrDefault()?.Trim('/');
+
+                    // Combine the host part with the last path segment
+                    string shortenedUrl = string.IsNullOrWhiteSpace(lastSegment)
+                        ? hostPart
+                        : $"{hostPart}/{lastSegment}";
+
+                    return shortenedUrl;
                 }
-                return url;
+                catch (UriFormatException)
+                {
+                    // In case of a malformed URL, fallback to returning the original value
+                    return url;
+                }
             }
             return value;
         }
