@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Net.Http;
 using System.ServiceProcess;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Threading;
 using Newtonsoft.Json;
 
@@ -19,6 +21,7 @@ namespace ServicesChecker
             serviceStatuses = LoadServiceStatuses();
             ServiceStatusListView.ItemsSource = serviceStatuses;
             StartServiceCheckTimer();
+            AddSorting();
         }
         private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -46,7 +49,6 @@ namespace ServicesChecker
             {
                 using (ServiceController serviceController = new ServiceController(serviceName))
                 {
-                    // Simply attempt to access the Status property to verify existence
                     var status = serviceController.Status;
                     return true; // If no exception is thrown, the service exists
                 }
@@ -167,6 +169,13 @@ namespace ServicesChecker
                 return JsonConvert.DeserializeObject<ObservableCollection<ServiceStatus>>(json);
             }
             return new ObservableCollection<ServiceStatus>();
+        }
+
+        private void AddSorting()
+        {
+            ICollectionView collectionView = CollectionViewSource.GetDefaultView(serviceStatuses);
+            collectionView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+            collectionView.SortDescriptions.Add(new SortDescription("Status", ListSortDirection.Ascending));
         }
     }
 }
