@@ -1,4 +1,4 @@
 # ServicesChecker
 Application to check if a service is working properly
 
-The application is supposed to let you add everything on a parameter so that everyone can declare for themselves what service they want to check and how (whether it's a system service or some external service and endpoint response).
+The application allows you to check the status of added services. Services can be both local (system) and external services as a response to a set request. The application itself verifies whether it is a local service or a set request.
