@@ -46,7 +46,9 @@ namespace ServicesChecker
             {
                 using (ServiceController serviceController = new ServiceController(serviceName))
                 {
-                    return serviceController.Status != ServiceControllerStatus.Stopped;
+                    // Simply attempt to access the Status property to verify existence
+                    var status = serviceController.Status;
+                    return true; // If no exception is thrown, the service exists
                 }
             }
             catch
