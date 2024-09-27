@@ -12,6 +12,10 @@
         MinWidth="350"
         SizeToContent="Height"
         >
+
+    <Window.Resources>
+        <local:UrlShortenerConverter x:Key="UrlShortenerConverter"/>
+    </Window.Resources>
     <Grid>
         <StackPanel Grid.ColumnSpan="2">
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10,10,10,0"/>
@@ -25,7 +29,7 @@
                 </ListView.ContextMenu>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name}" Width="200"/>
+                        <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="200"/>
                         <GridViewColumn Header="Status" Width="104">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
