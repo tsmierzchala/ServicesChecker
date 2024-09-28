@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.ServiceProcess;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Newtonsoft.Json;
@@ -176,6 +177,60 @@ namespace ServicesChecker
             ICollectionView collectionView = CollectionViewSource.GetDefaultView(serviceStatuses);
             collectionView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
             collectionView.SortDescriptions.Add(new SortDescription("Status", ListSortDirection.Ascending));
+        }
+
+        private void ChangeServiceStatusMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService && !selectedService.IsRestService)
+            {
+                ChangeLocalServiceStatus(selectedService.Name);
+                SaveServiceStatuses();
+                UpdateServiceStatuses();
+                ServiceStatusListView.Items.Refresh();
+            }
+        }
+
+        private void ChangeLocalServiceStatus(string serviceName)
+        {
+            try
+            {
+                using (ServiceController serviceController = new ServiceController(serviceName))
+                {
+                    if (serviceController.Status == ServiceControllerStatus.Running)
+                    {
+                        serviceController.Stop();
+                        serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+                    }
+                    else if (serviceController.Status == ServiceControllerStatus.Stopped)
+                    {
+                        serviceController.Start();
+                        serviceController.WaitForStatus(ServiceControllerStatus.Running);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to change service status: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ServiceStatusListView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
+            {
+                // Find the context menu and the specific menu item
+                ContextMenu contextMenu = ServiceStatusListView.ContextMenu;
+                MenuItem changeStatusMenuItem = contextMenu.Items
+                    .OfType<MenuItem>()
+                    .FirstOrDefault(item => item.Header.ToString() == "Change status");
+
+                if (changeStatusMenuItem != null)
+                {
+                    // Set visibility based on whether the service is a REST service or not
+                    changeStatusMenuItem.Visibility = selectedService.IsRestService ? Visibility.Collapsed : Visibility.Visible;
+                }
+            }
         }
     }
 }
