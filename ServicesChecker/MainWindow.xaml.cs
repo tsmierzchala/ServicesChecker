@@ -179,19 +179,18 @@ namespace ServicesChecker
             collectionView.SortDescriptions.Add(new SortDescription("Status", ListSortDirection.Ascending));
         }
 
-        private void ChangeServiceStatusMenuItem_Click(object sender, RoutedEventArgs e)
+        private async void ChangeServiceStatusMenuItem_Click(object sender, RoutedEventArgs e)
         {
-
             if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService && !selectedService.IsRestService)
             {
-                ChangeLocalServiceStatus(selectedService.Name);
+                await ChangeLocalServiceStatusAsync(selectedService.Name);
                 SaveServiceStatuses();
-                UpdateServiceStatuses();
+                await UpdateServiceStatuses();
                 ServiceStatusListView.Items.Refresh();
             }
         }
 
-        private void ChangeLocalServiceStatus(string serviceName)
+        private async Task ChangeLocalServiceStatusAsync(string serviceName)
         {
             try
             {
@@ -200,12 +199,12 @@ namespace ServicesChecker
                     if (serviceController.Status == ServiceControllerStatus.Running)
                     {
                         serviceController.Stop();
-                        serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Stopped));
                     }
                     else if (serviceController.Status == ServiceControllerStatus.Stopped)
                     {
                         serviceController.Start();
-                        serviceController.WaitForStatus(ServiceControllerStatus.Running);
+                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Running));
                     }
                 }
             }
