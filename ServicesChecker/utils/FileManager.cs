@@ -216,25 +216,17 @@ namespace ServicesChecker.utils
         {
             try
             {
-                // sprawdź czy istnieje katalog D:\Aplikacje\Temp\ jeśli nie to utwórz
                 string targetDirectory = @"D:\Aplikacje\Temp\";
                 if (!Directory.Exists(targetDirectory))
                 {
                     Directory.CreateDirectory(targetDirectory);
                 }
 
-                // Usuwanie starych plików
-                var zipFiles = Directory.GetFiles(targetDirectory, "*.zip");
-                foreach (var zipFile in zipFiles)
+                var directoriesToDelete = new[] { "Market3_Ross", "Market3_IM", "Market3_BM", "Forsmann", "Prommann" };
+                foreach (var dir in directoriesToDelete)
                 {
-                    File.Delete(zipFile);
+                    DeleteDirectoryIfExists(Path.Combine(targetDirectory, dir));
                 }
-
-                DeleteDirectoryIfExists(Path.Combine(targetDirectory, "Market3_Ross"));
-                DeleteDirectoryIfExists(Path.Combine(targetDirectory, "Market3_IM"));
-                DeleteDirectoryIfExists(Path.Combine(targetDirectory, "Market3_BM"));
-                DeleteDirectoryIfExists(Path.Combine(targetDirectory, "Forsmann"));
-                DeleteDirectoryIfExists(Path.Combine(targetDirectory, "Prommann"));
 
                 NetworkDriveManager.MapNetworkDrive(
                     "K",
@@ -263,30 +255,56 @@ namespace ServicesChecker.utils
                 string newestMarketBMZip = Directory.GetFiles(marketBMDir, "*.zip").OrderBy(f => new FileInfo(f).CreationTime).Last();
                 string newestMarketStoreZip = Directory.GetFiles(marketStoreDir, "*.zip").OrderBy(f => new FileInfo(f).CreationTime).Last();
 
-                FileManager.CopyDirectory((string?)await FileManager.FindNewestFolder(forsmanDir), targetDirectory);
-                //File.Copy(Path.Combine(forsmanDir, newestForsmannDir), Path.Combine(targetDirectory, Path.GetFileName(newestForsmannDir)), true);
-                File.Copy(newestMarketIMZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketIMZip)), true);
-                File.Copy(newestMarketBMZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketBMZip)), true);
-                File.Copy(newestMarketStoreZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketStoreZip)), true);
+                var tasks = new List<Task>
+                {
+                    Task.Run(async () => CopyDirectory((string?)await FileManager.FindNewestFolder(forsmanDir), targetDirectory)),
+                    Task.Run(() => File.Copy(newestMarketIMZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketIMZip)), true)),
+                    Task.Run(() => File.Copy(newestMarketBMZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketBMZip)), true)),
+                    Task.Run(() => File.Copy(newestMarketStoreZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketStoreZip)), true))
+                };
+
+                await Task.WhenAll(tasks);
 
                 // Wypakowywanie plików
-                Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_IM"));
-                await Task.Run(() => System.IO.Compression.ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketIMZip)), Path.Combine(targetDirectory, "Market3_IM")));
+                tasks = new List<Task>
+                {
+                    Task.Run(() =>
+                    {
+                        Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_IM"));
+                        ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketIMZip)), Path.Combine(targetDirectory, "Market3_IM"));
+                    }),
+                    Task.Run(() =>
+                    {
+                        Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_BM"));
+                        ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketBMZip)), Path.Combine(targetDirectory, "Market3_BM"));
+                    }),
+                    Task.Run(() =>
+                    {
+                        Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_Ross"));
+                        ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketStoreZip)), Path.Combine(targetDirectory, "Market3_Ross"));
+                    }),
+                    Task.Run(() =>
+                    {
+                        Directory.CreateDirectory(Path.Combine(targetDirectory, "Forsmann"));
+                        ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, $"Forsmann_{newestForsmannVersion}.zip"), Path.Combine(targetDirectory, "Forsmann"));
+                    }),
+                    Task.Run(() =>
+                    {
+                        Directory.CreateDirectory(Path.Combine(targetDirectory, "Prommann"));
+                        ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, $"Prommann_{newestForsmannVersion}.zip"), Path.Combine(targetDirectory, "Prommann"));
+                    })
+                };
 
-                Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_BM"));
-                await Task.Run(() => System.IO.Compression.ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketBMZip)), Path.Combine(targetDirectory, "Market3_BM")));
+                await Task.WhenAll(tasks);
 
-                Directory.CreateDirectory(Path.Combine(targetDirectory, "Market3_Ross"));
-                await Task.Run(() => System.IO.Compression.ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, Path.GetFileName(newestMarketStoreZip)), Path.Combine(targetDirectory, "Market3_Ross")));
+                // Get config M3 and set in Market3 folder
+                CopyDirectory(
+                    @"G:\tsmierzchala\Automaty\Market3\config",
+                    Path.Combine(targetDirectory, @"Market3\config")
+                );
 
-                Directory.CreateDirectory(Path.Combine(targetDirectory, "Forsmann"));
-                await Task.Run(() => System.IO.Compression.ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, $"Forsmann_{newestForsmannVersion}.zip"), Path.Combine(targetDirectory, "Forsmann")));
-
-                Directory.CreateDirectory(Path.Combine(targetDirectory, "Prommann"));
-                await Task.Run(() => System.IO.Compression.ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, $"Prommann_{newestForsmannVersion}.zip"), Path.Combine(targetDirectory, "Prommann")));
-
-                // Usuwanie archiwów
-                zipFiles = Directory.GetFiles(targetDirectory, "*.zip");
+                // Usuwanie starych plików
+                var zipFiles = Directory.GetFiles(targetDirectory, "*.zip");
                 foreach (var zipFile in zipFiles)
                 {
                     File.Delete(zipFile);
