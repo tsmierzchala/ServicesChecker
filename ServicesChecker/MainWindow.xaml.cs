@@ -1,15 +1,10 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
-using System.Net.Http;
-using System.ServiceProcess;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
-using Docker.DotNet;
 using Docker.DotNet.Models;
-using Newtonsoft.Json;
 using ServicesChecker.utils;
 
 namespace ServicesChecker
