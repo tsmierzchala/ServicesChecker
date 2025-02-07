@@ -32,6 +32,9 @@
                HorizontalAlignment="Center" 
                VerticalAlignment="Center" 
                Width="200" Height="30" Margin="0,-35,0,0" TextAlignment="Center"/>
+            <ComboBox x:Name="DockerContainerComboBox" SelectionChanged="DockerContainerComboBox_SelectionChanged" Width="200" Height="30" VerticalAlignment="Top" Margin="10">
+                <!-- Items will be added dynamically -->
+            </ComboBox>
             <ListView x:Name="ServiceStatusListView"
                       ContextMenuOpening="ServiceStatusListView_ContextMenuOpening"
                       Margin="10" 

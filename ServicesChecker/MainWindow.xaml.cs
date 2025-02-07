@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Docker.DotNet;
 using Newtonsoft.Json;
 using ServicesChecker.utils;
 
@@ -15,28 +16,55 @@ namespace ServicesChecker
     public partial class MainWindow : Window
     {
         private ObservableCollection<ServiceStatus> serviceStatuses;
-        private const string JsonFilePath = "services.json";
         private DispatcherTimer timer;
+        private DockerManager dockerManager;
+        private ServiceManager serviceManager;
+
         public MainWindow()
         {
             InitializeComponent();
-            serviceStatuses = LoadServiceStatuses();
+            serviceManager = new ServiceManager();
+            serviceStatuses = serviceManager.LoadServiceStatuses();
             ServiceStatusListView.ItemsSource = serviceStatuses;
             StartServiceCheckTimer();
             AddSorting();
+            InitializeDockerManager();
         }
+
+        private void InitializeDockerManager()
+        {
+            dockerManager = new DockerManager();
+            dockerManager.InitializeDockerClient();
+            dockerManager.LoadConfig();
+            LoadDockerContainers();
+        }
+
+        private async void LoadDockerContainers()
+        {
+            var containerNames = await dockerManager.GetContainerNamesAsync();
+            DockerContainerComboBox.Items.Clear();
+
+            foreach (var name in containerNames)
+            {
+                DockerContainerComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = name
+                });
+            }
+        }
+
         private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
             string serviceName = ServiceNameTextBox.Text;
-            if (!string.IsNullOrWhiteSpace(serviceName) && !ServiceExists(serviceName))
+            if (!string.IsNullOrWhiteSpace(serviceName) && !serviceManager.ServiceExists(serviceStatuses, serviceName))
             {
-                if (CheckIfLocalServiceExists(serviceName))
+                if (serviceManager.CheckIfLocalServiceExists(serviceName))
                 {
-                    AddService(serviceName, false, "Local Service");
+                    serviceManager.AddService(serviceStatuses, serviceName, false, "Local Service");
                 }
-                else if (await CheckIfRestServiceExists(serviceName))
+                else if (await serviceManager.CheckIfRestServiceExists(serviceName))
                 {
-                    AddService(serviceName, true, "REST Service");
+                    serviceManager.AddService(serviceStatuses, serviceName, true, "REST Service");
                 }
                 else
                 {
@@ -45,54 +73,14 @@ namespace ServicesChecker
             }
             ServiceNameTextBox.Clear();
         }
-        private bool CheckIfLocalServiceExists(string serviceName)
-        {
-            try
-            {
-                using (ServiceController serviceController = new ServiceController(serviceName))
-                {
-                    var status = serviceController.Status;
-                    return true; // If no exception is thrown, the service exists
-                }
-            }
-            catch
-            {
-                return false; // Service does not exist
-            }
-        }
-        private async Task<bool> CheckIfRestServiceExists(string url)
-        {
-            try
-            {
-                using (HttpClient client = new HttpClient())
-                {
-                    var response = await client.GetAsync(url);
-                    return response.IsSuccessStatusCode;
-                }
-            }
-            catch
-            {
-                return false; // Address is not a valid REST service
-            }
-        }
 
-        private void AddService(string serviceName, bool isRestService, string status)
-        {
-            serviceStatuses.Add(new ServiceStatus
-            {
-                Name = serviceName,
-                Status = status,
-                IsRestService = isRestService
-            });
-            SaveServiceStatuses();
-            UpdateServiceStatuses();
-        }
         private async void StartServiceCheckTimer()
         {
             timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             timer.Tick += async (s, e) => await UpdateServiceStatuses();
             timer.Start();
         }
+
         private async Task UpdateServiceStatuses()
         {
             var serviceStatusesCopy = serviceStatuses.ToList();
@@ -100,77 +88,23 @@ namespace ServicesChecker
             {
                 if (service.IsRestService)
                 {
-                    service.Status = await CheckRestServiceStatus(service.Name);
+                    service.Status = await serviceManager.CheckRestServiceStatus(service.Name);
                 }
                 else
                 {
-                    service.Status = CheckLocalServiceStatus(service.Name);
+                    service.Status = serviceManager.CheckLocalServiceStatus(service.Name);
                 }
             }
             ServiceStatusListView.Items.Refresh();
         }
-        private string CheckLocalServiceStatus(string serviceName)
-        {
-            try
-            {
-                using (ServiceController serviceController = new ServiceController(serviceName))
-                {
-                    return serviceController.Status.ToString();
-                }
-            }
-            catch (Exception e)
-            {
-                return $"Error: {e.Message}";
-            }
-        }
-        private async Task<string> CheckRestServiceStatus(string url)
-        {
-            try
-            {
-                using (HttpClient client = new HttpClient())
-                {
-                    var response = await client.GetAsync(url);
-                    return response.IsSuccessStatusCode ? "Available" : "Unavailable";
-                }
-            }
-            catch (Exception e)
-            {
-                return $"Error: {e.Message}";
-            }
-        }
+
         private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
         {
-
             if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
             {
                 serviceStatuses.Remove(selectedService);
-                SaveServiceStatuses();
+                serviceManager.SaveServiceStatuses(serviceStatuses);
             }
-        }
-        private bool ServiceExists(string serviceName)
-        {
-            foreach (var service in serviceStatuses)
-            {
-                if (service.Name.Equals(serviceName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        private void SaveServiceStatuses()
-        {
-            var json = JsonConvert.SerializeObject(serviceStatuses);
-            File.WriteAllText(JsonFilePath, json);
-        }
-        private ObservableCollection<ServiceStatus> LoadServiceStatuses()
-        {
-            if (File.Exists(JsonFilePath))
-            {
-                var json = File.ReadAllText(JsonFilePath);
-                return JsonConvert.DeserializeObject<ObservableCollection<ServiceStatus>>(json);
-            }
-            return new ObservableCollection<ServiceStatus>();
         }
 
         private void AddSorting()
@@ -184,34 +118,10 @@ namespace ServicesChecker
         {
             if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService && !selectedService.IsRestService)
             {
-                await ChangeLocalServiceStatusAsync(selectedService.Name);
-                SaveServiceStatuses();
+                await serviceManager.ChangeLocalServiceStatusAsync(selectedService.Name);
+                serviceManager.SaveServiceStatuses(serviceStatuses);
                 await UpdateServiceStatuses();
                 ServiceStatusListView.Items.Refresh();
-            }
-        }
-
-        private async Task ChangeLocalServiceStatusAsync(string serviceName)
-        {
-            try
-            {
-                using (ServiceController serviceController = new ServiceController(serviceName))
-                {
-                    if (serviceController.Status == ServiceControllerStatus.Running)
-                    {
-                        serviceController.Stop();
-                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Stopped));
-                    }
-                    else if (serviceController.Status == ServiceControllerStatus.Stopped)
-                    {
-                        serviceController.Start();
-                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Running));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Failed to change service status: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -259,5 +169,13 @@ namespace ServicesChecker
             });
         }
 
+        private async void DockerContainerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DockerContainerComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedContainer = selectedItem.Content.ToString();
+                await DockerManager.ManageDockerContainers(selectedContainer, dockerManager.GetClient());
+            }
+        }
     }
 }
