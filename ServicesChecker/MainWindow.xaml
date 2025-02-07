@@ -20,7 +20,18 @@
         <StackPanel Grid.ColumnSpan="2">
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10,10,10,0"/>
             <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="200" Margin="10"/>
-            <Button Content="Get Apps" Click="GetAppsButton_Click" Margin="10"/>
+            <Button x:Name="GetAppsButton" Content="Get Apps" Click="GetAppsButton_Click" Margin="10"/>
+            <ProgressBar x:Name="LoadingProgressBar" 
+             IsIndeterminate="True" 
+             Visibility="Collapsed" 
+             HorizontalAlignment="Center" 
+             VerticalAlignment="Center" 
+             Width="328" Height="30" Margin="10"/>
+            <TextBlock x:Name="LoadingStatusTextBlock" 
+               Visibility="Collapsed" 
+               HorizontalAlignment="Center" 
+               VerticalAlignment="Center" 
+               Width="200" Height="30" Margin="0,-35,0,0" TextAlignment="Center"/>
             <ListView x:Name="ServiceStatusListView"
                       ContextMenuOpening="ServiceStatusListView_ContextMenuOpening"
                       Margin="10" 

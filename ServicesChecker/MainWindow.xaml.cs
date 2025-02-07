@@ -235,7 +235,34 @@ namespace ServicesChecker
 
         private async void GetAppsButton_Click(object sender, RoutedEventArgs e)
         {
-            await Task.Run(async () => await FileManager.GetAppsAsync());
+            try
+            {
+                GetAppsButton.Visibility = Visibility.Collapsed; // Ukryj przycisk
+                LoadingProgressBar.Visibility = Visibility.Visible; // Pokaż wskaźnik ładowania
+                LoadingStatusTextBlock.Visibility = Visibility.Visible; // Pokaż status ładowania
+
+                //LoadingProgressBar.IsIndeterminate = false;
+                //LoadingProgressBar.Minimum = 0;
+                //LoadingProgressBar.Maximum = 100;
+                //LoadingProgressBar.Value = 0;
+
+                await FileManager.GetAppsAsync(UpdateProgress);
+            }
+            finally
+            {
+                LoadingProgressBar.Visibility = Visibility.Collapsed; // Ukryj wskaźnik ładowania
+                LoadingStatusTextBlock.Visibility = Visibility.Collapsed; // Ukryj status ładowania
+                GetAppsButton.Visibility = Visibility.Visible; // Pokaż przycisk
+            }
+        }
+
+        private void UpdateProgress(double progress, string status)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                //LoadingProgressBar.Value = progress;
+                LoadingStatusTextBlock.Text = status;
+            });
         }
 
     }
