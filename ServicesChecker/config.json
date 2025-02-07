@@ -1,8 +1,8 @@
 {
-  "ContainerIds": [
-    "9f4d96774265b7083327ed3f76d7823488b518aa4fd10bf1a491a921672b00f7",
-    "ddc2978acbaf8570adc96f7d1b07c15fb46177c5e96ea4763e56314e7a0a08e5",
-    "9a1b9c34849e860b8cf8e364ddf1d5652837439523f791062b178dd9b8af6aa0",
-    "2180c2f31c6cbae93e7a0a2a56c54a97cac12b64d3558bc60481012801f3d072"
+  "ContainerNames": [
+    "18xe_ross_store",
+    "18xe_im_skierniewice",
+    "18xe_bm_jaroslaw",
+    "18xe_bm_sap"
   ]
 }

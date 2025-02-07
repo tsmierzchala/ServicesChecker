@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Docker.DotNet;
+using Docker.DotNet.Models;
 using Newtonsoft.Json;
 using ServicesChecker.utils;
 
@@ -19,6 +20,7 @@ namespace ServicesChecker
         private DispatcherTimer timer;
         private DockerManager dockerManager;
         private ServiceManager serviceManager;
+        private string currentContainer = null;
 
         public MainWindow()
         {
@@ -44,14 +46,31 @@ namespace ServicesChecker
             var containerNames = await dockerManager.GetContainerNamesAsync();
             DockerContainerComboBox.Items.Clear();
 
+            ComboBoxItem selectedItem = null;
+
             foreach (var name in containerNames)
             {
-                DockerContainerComboBox.Items.Add(new ComboBoxItem
+                var item = new ComboBoxItem
                 {
                     Content = name
-                });
+                };
+                DockerContainerComboBox.Items.Add(item);
+
+                // Sprawdź, czy kontener jest uruchomiony
+                var container = await dockerManager.GetContainerByNameAsync(name);
+                if (container != null && container.State == "running" && selectedItem == null)
+                {
+                    selectedItem = item;
+                }
+            }
+
+            // Ustaw uruchomiony kontener jako wybrany
+            if (selectedItem != null)
+            {
+                DockerContainerComboBox.SelectedItem = selectedItem;
             }
         }
+
 
         private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -169,13 +188,37 @@ namespace ServicesChecker
             });
         }
 
+        
+
         private async void DockerContainerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DockerContainerComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
-                string selectedContainer = selectedItem.Content.ToString();
+                string selectedContainer = "/" + selectedItem.Content.ToString();
+
+                if (currentContainer != null && currentContainer != selectedContainer)
+                {
+                    // Najpierw zatrzymaj aktualny kontener
+                    var currentContainerInfo = await dockerManager.GetContainerByNameAsync(currentContainer.TrimStart('/'));
+                    if (currentContainerInfo != null && currentContainerInfo.State == "running")
+                    {
+                        bool stopped = await dockerManager.GetClient().Containers.StopContainerAsync(currentContainerInfo.ID, new ContainerStopParameters());
+                        if (!stopped)
+                        {
+                            Console.WriteLine($"Failed to stop container: {currentContainerInfo.ID}");
+                            return; // Jeśli nie uda się zatrzymać, zakończ operację
+                        }
+                    }
+
+                    // Ustaw nowy kontener jako aktualny
+                    currentContainer = selectedContainer;
+                }
+
+                // Uruchom nowo wybrany kontener
                 await DockerManager.ManageDockerContainers(selectedContainer, dockerManager.GetClient());
+                currentContainer = selectedContainer;
             }
         }
+
     }
 }

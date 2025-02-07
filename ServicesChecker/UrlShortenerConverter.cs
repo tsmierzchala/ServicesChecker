@@ -7,7 +7,7 @@ namespace ServicesChecker
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is string url)
+            if (value is string url && Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
                 try
                 {

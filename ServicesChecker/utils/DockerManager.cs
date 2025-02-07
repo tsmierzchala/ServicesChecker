@@ -10,7 +10,7 @@ namespace ServicesChecker.utils
     {
         private DockerClient client;
         private const string ConfigFilePath = "config.json";
-        private List<string> containerIds;
+        private List<string> containerNames;
 
         public void InitializeDockerClient()
         {
@@ -31,11 +31,13 @@ namespace ServicesChecker.utils
             {
                 var json = File.ReadAllText(ConfigFilePath);
                 var config = JsonConvert.DeserializeObject<Config>(json);
-                containerIds = config.ContainerIds;
+                containerNames = config.ContainerNames;
+                Console.WriteLine("Loaded container names from config: " + string.Join(", ", containerNames));
             }
             else
             {
-                containerIds = new List<string>();
+                containerNames = new List<string>();
+                Console.WriteLine("Config file not found, using empty container name list.");
             }
         }
 
@@ -44,10 +46,13 @@ namespace ServicesChecker.utils
             try
             {
                 var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
-                return containers
-                    .Where(container => containerIds.Contains(container.ID))
+                var filteredContainers = containers
+                    .Where(container => containerNames.Contains(container.Names.FirstOrDefault()?.TrimStart('/')))
                     .Select(container => container.Names.FirstOrDefault()?.TrimStart('/'))
                     .ToList();
+
+                Console.WriteLine("Filtered container names: " + string.Join(", ", filteredContainers));
+                return filteredContainers;
             }
             catch (HttpRequestException ex)
             {
@@ -57,33 +62,73 @@ namespace ServicesChecker.utils
             }
         }
 
+        public async Task<ContainerListResponse> GetContainerByNameAsync(string name)
+        {
+            try
+            {
+                var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
+                return containers.FirstOrDefault(container => container.Names.Any(n => n.TrimStart('/') == name));
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log the exception and handle it appropriately
+                Console.WriteLine($"Error connecting to Docker: {ex.Message}");
+                throw;
+            }
+        }
 
         public static async Task ManageDockerContainers(string selectedContainer, DockerClient client)
         {
-            var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
-
-            foreach (var container in containers)
+            try
             {
-                if (container.Names.Any(name => name.Contains(selectedContainer)))
+                var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
+
+                foreach (var container in containers)
                 {
-                    if (container.State != "running")
+                    Console.WriteLine($"Checking container: {container.Names.FirstOrDefault()} with state: {container.State}");
+
+                    if (container.Names.Any(name => name.Equals(selectedContainer)))
                     {
-                        await client.Containers.StartContainerAsync(container.ID, new ContainerStartParameters());
+                        if (container.State != "running")
+                        {
+                            Console.WriteLine($"Starting container: {container.ID}");
+                            bool started = await client.Containers.StartContainerAsync(container.ID, new ContainerStartParameters());
+                            if (!started)
+                            {
+                                Console.WriteLine($"Failed to start container: {container.ID}");
+                            }
+                        }
                     }
-                }
-                else
-                {
-                    if (container.State == "running")
+                    else
                     {
-                        await client.Containers.StopContainerAsync(container.ID, new ContainerStopParameters());
+                        if (container.State == "running")
+                        {
+                            Console.WriteLine($"Stopping container: {container.ID}");
+                            bool stopped = await client.Containers.StopContainerAsync(container.ID, new ContainerStopParameters());
+                            if (!stopped)
+                            {
+                                Console.WriteLine($"Failed to stop container: {container.ID}");
+                            }
+                        }
                     }
                 }
             }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error connecting to Docker: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw;
+            }
         }
+
     }
 
     public class Config
     {
-        public List<string> ContainerIds { get; set; }
+        public List<string> ContainerNames { get; set; }
     }
 }
