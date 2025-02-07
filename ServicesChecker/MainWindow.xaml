@@ -20,6 +20,7 @@
         <StackPanel Grid.ColumnSpan="2">
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10,10,10,0"/>
             <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="200" Margin="10"/>
+            <Button Content="Get Apps" Click="GetAppsButton_Click" Margin="10"/>
             <ListView x:Name="ServiceStatusListView"
                       ContextMenuOpening="ServiceStatusListView_ContextMenuOpening"
                       Margin="10" 

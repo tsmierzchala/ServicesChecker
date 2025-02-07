@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Threading;
 using Newtonsoft.Json;
+using ServicesChecker.utils;
 
 namespace ServicesChecker
 {
@@ -231,5 +232,11 @@ namespace ServicesChecker
                 }
             }
         }
+
+        private async void GetAppsButton_Click(object sender, RoutedEventArgs e)
+        {
+            await Task.Run(async () => await FileManager.GetAppsAsync());
+        }
+
     }
 }
