@@ -19,6 +19,7 @@
     <Grid>
         <StackPanel Grid.ColumnSpan="2">
             <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10,10,10,0"/>
+            <CheckBox x:Name="IsConnectingToDBCheckBox" Content="Is Connecting to DB" Margin="100,0,100,0"/>
             <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="200" Margin="10"/>
             <Button x:Name="GetAppsButton" Content="Get Apps" Click="GetAppsButton_Click" Height="30" Margin="10"/>
             <ProgressBar x:Name="LoadingProgressBar" 

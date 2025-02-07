@@ -70,15 +70,17 @@ namespace ServicesChecker
         private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
             string serviceName = ServiceNameTextBox.Text;
+            bool isConnectingToDB = IsConnectingToDBCheckBox.IsChecked == true;
+
             if (!string.IsNullOrWhiteSpace(serviceName) && !serviceManager.ServiceExists(serviceStatuses, serviceName))
             {
                 if (serviceManager.CheckIfLocalServiceExists(serviceName))
                 {
-                    serviceManager.AddService(serviceStatuses, serviceName, false, "Local Service");
+                    serviceManager.AddService(serviceStatuses, serviceName, false, "Local Service", isConnectingToDB);
                 }
                 else if (await serviceManager.CheckIfRestServiceExists(serviceName))
                 {
-                    serviceManager.AddService(serviceStatuses, serviceName, true, "REST Service");
+                    serviceManager.AddService(serviceStatuses, serviceName, true, "REST Service", isConnectingToDB);
                 }
                 else
                 {
@@ -86,6 +88,7 @@ namespace ServicesChecker
                 }
             }
             ServiceNameTextBox.Clear();
+            IsConnectingToDBCheckBox.IsChecked = false;
         }
 
         private async void StartServiceCheckTimer()
@@ -193,7 +196,16 @@ namespace ServicesChecker
 
                 if (currentContainer != null && currentContainer != selectedContainer)
                 {
-                    // Najpierw zatrzymaj aktualny kontener
+                    // Najpierw zatrzymaj usługi łączące się z bazą danych
+                    foreach (var service in serviceStatuses.Where(s => s.IsConnectingToDB))
+                    {
+                        if (serviceManager.CheckIfLocalServiceExists(service.Name))
+                        {
+                            await serviceManager.StopService(service.Name);
+                        }
+                    }
+
+                    // Następnie zatrzymaj aktualny kontener
                     var currentContainerInfo = await dockerManager.GetContainerByNameAsync(currentContainer.TrimStart('/'));
                     if (currentContainerInfo != null && currentContainerInfo.State == "running")
                     {

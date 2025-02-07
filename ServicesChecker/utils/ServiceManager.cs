@@ -101,13 +101,14 @@ namespace ServicesChecker.utils
             return false;
         }
 
-        public void AddService(ObservableCollection<ServiceStatus> serviceStatuses, string serviceName, bool isRestService, string status)
+        public void AddService(ObservableCollection<ServiceStatus> serviceStatuses, string serviceName, bool isRestService, string status, bool isConnectingToDB)
         {
             serviceStatuses.Add(new ServiceStatus
             {
                 Name = serviceName,
                 Status = status,
-                IsRestService = isRestService
+                IsRestService = isRestService,
+                IsConnectingToDB = isConnectingToDB
             });
             SaveServiceStatuses(serviceStatuses);
         }
@@ -127,6 +128,25 @@ namespace ServicesChecker.utils
                     {
                         serviceController.Start();
                         await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Running));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to change service status: {ex.Message}", ex);
+            }
+        }
+
+        public async Task StopService(string serviceName)
+        {
+            try
+            {
+                using (ServiceController serviceController = new ServiceController(serviceName))
+                {
+                    if (serviceController.Status == ServiceControllerStatus.Running)
+                    {
+                        serviceController.Stop();
+                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Stopped));
                     }
                 }
             }
