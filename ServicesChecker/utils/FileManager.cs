@@ -212,7 +212,7 @@ namespace ServicesChecker.utils
             }
         }
 
-        public static async Task GetAppsAsync(Action<double, string> updateProgress)
+        public static async Task GetAppsAsync(Action<string> updateProgress)
         {
             try
             {
@@ -228,7 +228,7 @@ namespace ServicesChecker.utils
                     DeleteDirectoryIfExists(Path.Combine(targetDirectory, dir));
                 }
 
-                updateProgress(0, "Mapping network drives...");
+                updateProgress("Mapping network drives...");
                 NetworkDriveManager.MapNetworkDrive(
                     "K",
                     @"\\10.60.1.242\m3build",
@@ -242,7 +242,7 @@ namespace ServicesChecker.utils
                     "koza1500"
                 );
 
-                updateProgress(5, "Loading configuration...");
+                updateProgress("Loading configuration...");
                 string addressIP = @"\\10.60.1.242\M3Build";
                 string forsmanDir = @"\\synek\serwis\Forsmann\Forsmann_Develop\";
                 string marketRossmannDir = $@"{addressIP}\Rossmann\";
@@ -263,7 +263,7 @@ namespace ServicesChecker.utils
                     Task.Run(() => File.Copy(newestMarketBMZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketBMZip)), true)),
                     Task.Run(() => File.Copy(newestMarketStoreZip, Path.Combine(targetDirectory, Path.GetFileName(newestMarketStoreZip)), true))
                 };
-                updateProgress(10, "Downloading files...");
+                updateProgress("Downloading files...");
                 await Task.WhenAll(tasks);
 
                 // Wypakowywanie plików
@@ -295,22 +295,22 @@ namespace ServicesChecker.utils
                         ZipFile.ExtractToDirectory(Path.Combine(targetDirectory, $"Prommann_{newestForsmannVersion}.zip"), Path.Combine(targetDirectory, "Prommann"));
                     })
                 };
-                updateProgress(40, "Unpacking files...");
+                updateProgress("Unpacking files...");
                 await Task.WhenAll(tasks);
  
-                updateProgress(80, "Get config M3 and set in Market3 folder...");
+                updateProgress("Get config M3 and set in Market3 folder...");
                 CopyDirectory(
                     @"G:\tsmierzchala\Automaty\Market3\config",
                     Path.Combine(targetDirectory, @"Market3\config")
                 );
 
-                updateProgress(90, "Deleting zip files...");
+                updateProgress("Deleting zip files...");
                 var zipFiles = Directory.GetFiles(targetDirectory, "*.zip");
                 foreach (var zipFile in zipFiles)
                 {
                     File.Delete(zipFile);
                 }
-                updateProgress(100, "Finished.");
+                updateProgress("Finished.");
                 //MessageBox.Show("Nowe wersje zostały prawidłowo pobrane.", "Sukces", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)

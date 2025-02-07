@@ -241,11 +241,6 @@ namespace ServicesChecker
                 LoadingProgressBar.Visibility = Visibility.Visible; // Pokaż wskaźnik ładowania
                 LoadingStatusTextBlock.Visibility = Visibility.Visible; // Pokaż status ładowania
 
-                //LoadingProgressBar.IsIndeterminate = false;
-                //LoadingProgressBar.Minimum = 0;
-                //LoadingProgressBar.Maximum = 100;
-                //LoadingProgressBar.Value = 0;
-
                 await FileManager.GetAppsAsync(UpdateProgress);
             }
             finally
@@ -256,11 +251,10 @@ namespace ServicesChecker
             }
         }
 
-        private void UpdateProgress(double progress, string status)
+        private void UpdateProgress(string status)
         {
             Dispatcher.Invoke(() =>
             {
-                //LoadingProgressBar.Value = progress;
                 LoadingStatusTextBlock.Text = status;
             });
         }
