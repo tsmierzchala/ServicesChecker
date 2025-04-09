@@ -93,7 +93,7 @@ namespace ServicesChecker
 
         private async void StartServiceCheckTimer()
         {
-            timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(30) };
             timer.Tick += async (s, e) => await UpdateServiceStatuses();
             timer.Start();
         }
