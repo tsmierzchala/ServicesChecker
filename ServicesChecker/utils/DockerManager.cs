@@ -3,6 +3,7 @@ using Docker.DotNet.Models;
 using Newtonsoft.Json;
 using System.IO;
 using System.Net.Http;
+using System.Windows;
 
 namespace ServicesChecker.utils
 {
@@ -41,10 +42,37 @@ namespace ServicesChecker.utils
             }
         }
 
+        public async Task<bool> IsDockerDaemonRunningAsync()
+        {
+            try
+            {
+                // Wykonujemy prostą operację, aby sprawdzić, czy Docker daemon odpowiada
+                await client.System.PingAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Docker daemon is not running or unreachable: {ex.Message}");
+                return false;
+            }
+        }
+
+
         public async Task<List<string>> GetContainerNamesAsync()
         {
             try
             {
+                // Sprawdzamy, czy Docker daemon działa
+                if (!await IsDockerDaemonRunningAsync())
+                {
+                    MessageBox.Show("Docker daemon is not running. Please start Docker and try again.", "Docker Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    // close app after closed message box
+                    Application.Current.Shutdown();
+
+                    return new List<string>();
+                }
+
+                // Pobieramy listę kontenerów
                 var containers = await client.Containers.ListContainersAsync(new ContainersListParameters() { All = true });
                 var filteredContainers = containers
                     .Where(container => containerNames.Contains(container.Names.FirstOrDefault()?.TrimStart('/')))
