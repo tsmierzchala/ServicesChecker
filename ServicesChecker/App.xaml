@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:ServicesChecker"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <!-- The Application.Resources section will be empty -->
     </Application.Resources>
 </Application>

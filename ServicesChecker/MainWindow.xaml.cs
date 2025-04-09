@@ -9,6 +9,9 @@ using ServicesChecker.utils;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Media;
+using System.Globalization;
+using System.Linq;
 
 namespace ServicesChecker
 {
@@ -17,6 +20,7 @@ namespace ServicesChecker
         private ObservableCollection<ServiceStatus> serviceStatuses;
         private ObservableCollection<LogFileInfo> logFiles;
         private DispatcherTimer timer;
+        private DispatcherTimer logFileMonitorTimer;
         private DockerManager dockerManager;
         private ServiceManager serviceManager;
         private LogManager logManager;
@@ -37,6 +41,7 @@ namespace ServicesChecker
             LogFilesListView.ItemsSource = logFiles;
 
             StartServiceCheckTimer();
+            StartLogFileMonitorTimer();
             AddSorting();
             InitializeDockerManager();
         }
@@ -288,15 +293,78 @@ namespace ServicesChecker
             }
         }
 
+        private async void DeleteLogFilesFromDiskButton_Click(object sender, RoutedEventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Are you sure you want to delete all log files from disk?\n" +
+                "The files will be removed from your computer but kept in the application for monitoring.",
+                "Confirm Deletion",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                DeleteLogFilesFromDiskButton.IsEnabled = false;
+                try
+                {
+                    int deletedCount = await logManager.DeleteFilesFromDiskAsync(logFiles);
+
+                    if (deletedCount > 0)
+                    {
+                        MessageBox.Show(
+                            $"{deletedCount} log file(s) successfully deleted from disk but kept in the application for monitoring.",
+                            "Success",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+
+                        LogFilesListView.Items.Refresh();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "No files were deleted. All files may have already been removed from disk.",
+                            "Information",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+                finally
+                {
+                    DeleteLogFilesFromDiskButton.IsEnabled = true;
+                }
+            }
+        }
+
         private void OpenLogLocationMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (LogFilesListView.SelectedItem is LogFileInfo selectedLogFile &&
                 File.Exists(selectedLogFile.FilePath))
             {
+                if (!selectedLogFile.FileExists)
+                {
+                    MessageBox.Show(
+                        "This file does not exist at the specified location.",
+                        "File Not Found",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
                 // Open the file's directory in Windows Explorer and select the file
                 string argument = $"/select, \"{selectedLogFile.FilePath}\"";
                 Process.Start("explorer.exe", argument);
             }
+        }
+
+        private void StartLogFileMonitorTimer()
+        {
+            logFileMonitorTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            logFileMonitorTimer.Tick += (s, e) =>
+            {
+                logManager.CheckAllFilesExistence(logFiles);
+                LogFilesListView.Items.Refresh();
+            };
+            logFileMonitorTimer.Start();
         }
         #endregion
     }
