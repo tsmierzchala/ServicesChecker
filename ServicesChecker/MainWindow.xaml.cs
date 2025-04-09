@@ -362,6 +362,7 @@ namespace ServicesChecker
             logFileMonitorTimer.Tick += (s, e) =>
             {
                 logManager.CheckAllFilesExistence(logFiles);
+                logManager.UpdateFileSizes(logFiles);
                 LogFilesListView.Items.Refresh();
             };
             logFileMonitorTimer.Start();

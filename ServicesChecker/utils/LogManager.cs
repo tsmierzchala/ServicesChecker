@@ -21,10 +21,10 @@ namespace ServicesChecker.utils
                 var logFiles = JsonConvert.DeserializeObject<ObservableCollection<LogFileInfo>>(json)
                     ?? new ObservableCollection<LogFileInfo>();
 
-                // Update file existence status for all loaded files
+                // Update file existence status and size for all loaded files
                 foreach (var logFile in logFiles)
                 {
-                    logFile.UpdateExistenceStatus();
+                    logFile.UpdateExistenceAndSizeStatus();
                 }
 
                 return logFiles;
@@ -47,8 +47,7 @@ namespace ServicesChecker.utils
                 {
                     FilePath = filePath,
                     FileName = fileInfo.Name,
-                    FileSize = FormatFileSize(fileInfo.Length),
-                    LastModified = fileInfo.LastWriteTime
+                    FileSize = FormatFileSize(fileInfo.Length)
                 });
                 SaveLogFiles(logFiles); // Save changes after adding the file
             }
@@ -88,13 +87,26 @@ namespace ServicesChecker.utils
                     try
                     {
                         await Task.Run(() => File.Delete(logFile.FilePath));
-                        logFile.UpdateExistenceStatus(); // Update status immediately
+                        logFile.UpdateExistenceAndSizeStatus(); // Update status immediately
                         deletedCount++;
+                    }
+                    catch (IOException ex)
+                    {
+                        // Obs³uga pliku zajêtego przez inny proces
+                        MessageBox.Show($"Plik '{logFile.FileName}' jest u¿ywany przez inny proces i nie mo¿e zostaæ usuniêty.",
+                            "B³¹d", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                    catch (UnauthorizedAccessException ex)
+                    {
+                        // Obs³uga braku uprawnieñ
+                        MessageBox.Show($"Brak uprawnieñ do usuniêcia pliku '{logFile.FileName}'.",
+                            "B³¹d", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Error deleting file '{logFile.FileName}': {ex.Message}",
-                            "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        // Obs³uga innych wyj¹tków
+                        MessageBox.Show($"Nie mo¿na usun¹æ pliku '{logFile.FileName}': {ex.Message}",
+                            "B³¹d", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -118,11 +130,23 @@ namespace ServicesChecker.utils
         {
             foreach (var logFile in logFiles)
             {
-                logFile.UpdateExistenceStatus();
+                logFile.UpdateExistenceAndSizeStatus();
             }
         }
 
-        private string FormatFileSize(long bytes)
+        public void UpdateFileSizes(ObservableCollection<LogFileInfo> logFiles)
+        {
+            foreach (var logFile in logFiles)
+            {
+                if (logFile.FileExists && File.Exists(logFile.FilePath))
+                {
+                    var fileInfo = new FileInfo(logFile.FilePath);
+                    logFile.FileSize = FormatFileSize(fileInfo.Length);
+                }
+            }
+        }
+
+        public string FormatFileSize(long bytes)
         {
             string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
             int i = 0;
@@ -147,18 +171,34 @@ namespace ServicesChecker.utils
             set
             {
                 _filePath = value;
-                UpdateExistenceStatus();
+                UpdateExistenceAndSizeStatus();
                 OnPropertyChanged(nameof(FilePath));
             }
         }
 
-        public string FileName { get; set; }
-        public string FileSize { get; set; }
-        public DateTime LastModified { get; set; }
+        private string _fileName;
+        public string FileName 
+        { 
+            get => _fileName;
+            set
+            {
+                _fileName = value;
+                OnPropertyChanged(nameof(FileName));
+            }
+        }
+
+        private string _fileSize;
+        public string FileSize 
+        { 
+            get => _fileSize;
+            set
+            {
+                _fileSize = value;
+                OnPropertyChanged(nameof(FileSize));
+            }
+        }
 
         private Brush _statusIndicator;
-
-        // Property that represents the visual status of the file
         public Brush StatusIndicator
         {
             get => _statusIndicator;
@@ -172,11 +212,22 @@ namespace ServicesChecker.utils
         [JsonIgnore] // Don't serialize the existence status as it will be recalculated on load
         public bool FileExists { get; private set; }
 
-        // Method to update file existence status
-        public void UpdateExistenceStatus()
+        // Method to update file existence status and size
+        public void UpdateExistenceAndSizeStatus()
         {
             FileExists = !string.IsNullOrEmpty(FilePath) && File.Exists(FilePath);
             StatusIndicator = FileExists ? Brushes.Green : Brushes.Red;
+            
+            // Update file size if file exists
+            if (FileExists)
+            {
+                var fileInfo = new FileInfo(FilePath);
+                if (fileInfo.Exists)
+                {
+                    FileSize = new LogManager().FormatFileSize(fileInfo.Length);
+                }
+            }
+            
             OnPropertyChanged(nameof(StatusIndicator));
             OnPropertyChanged(nameof(FileExists));
         }

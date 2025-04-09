@@ -52,7 +52,7 @@
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="200"/>
-                                <GridViewColumn Header="Status" Width="104">
+                                <GridViewColumn Header="Status" Width="95">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -88,7 +88,7 @@
                             </ListView.ContextMenu>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="File Name" Width="120">
+                                    <GridViewColumn Header="File Name" Width="200">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
@@ -98,8 +98,7 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="70"/>
-                                    <GridViewColumn Header="Last Modified" DisplayMemberBinding="{Binding LastModified, StringFormat={}{0:dd-MM-yyyy HH:mm}}" Width="120"/>
+                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="95"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>
