@@ -67,7 +67,7 @@ namespace ServicesChecker.utils
                 {
                     MessageBox.Show("Docker daemon is not running. Please start Docker and try again.", "Docker Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     // close app after closed message box
-                    Application.Current.Shutdown();
+                    //Application.Current.Shutdown();
 
                     return new List<string>();
                 }

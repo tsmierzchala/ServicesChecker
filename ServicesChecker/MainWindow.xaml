@@ -75,7 +75,7 @@
                         <!-- Log file management buttons -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <Button x:Name="BrowseLogFileButton" Content="Browse" Width="150" Click="BrowseLogFileButton_Click" HorizontalAlignment="Left" Margin="0,0,10,0"/>
-                            <Button x:Name="DeleteLogFilesFromDiskButton" Content="Delete From Disk" Width="150" Click="DeleteLogFilesFromDiskButton_Click" HorizontalAlignment="Left"/>
+                            <Button x:Name="DeleteLogFilesFromDiskButton" Content="Delete From Disk" Width="147" Click="DeleteLogFilesFromDiskButton_Click" HorizontalAlignment="Left"/>
                         </StackPanel>
                         
                         <!-- Log files list -->
