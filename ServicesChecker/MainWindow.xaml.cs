@@ -267,18 +267,6 @@ namespace ServicesChecker
             }
         }
 
-        private void AddLogFileButton_Click(object sender, RoutedEventArgs e)
-        {
-            string logFilePath = LogFilePathTextBox.Text.Trim();
-
-            if (!string.IsNullOrWhiteSpace(logFilePath))
-            {
-                logManager.AddLogFile(logFiles, logFilePath);
-                LogFilePathTextBox.Clear();
-                LogFilesListView.Items.Refresh();
-            }
-        }
-
         private async void DeleteLogFileMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (LogFilesListView.SelectedItem is LogFileInfo selectedLogFile)
