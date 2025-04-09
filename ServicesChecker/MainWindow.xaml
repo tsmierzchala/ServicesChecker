@@ -69,10 +69,33 @@
             </TabItem>
             <TabItem Header="Configuration">
                 <Grid>
-                    <TextBlock Text="Configuration tab content" 
-                               HorizontalAlignment="Center" 
-                               VerticalAlignment="Center"
-                               FontStyle="Italic" />
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Log Files Management" FontWeight="Bold" Margin="0,0,0,10"/>
+                        
+                        <!-- Add log file section -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBox x:Name="LogFilePathTextBox" Width="235" Margin="0,0,5,0" ToolTip="Enter path to log file"/>
+                            <Button x:Name="BrowseLogFileButton" Content="Browse" Width="60" Click="BrowseLogFileButton_Click"/>
+                        </StackPanel>
+                        <Button x:Name="AddLogFileButton" Content="Add Log File" Width="150" HorizontalAlignment="Left" Margin="0,0,0,10" Click="AddLogFileButton_Click"/>
+                        
+                        <!-- Log files list -->
+                        <ListView x:Name="LogFilesListView" Height="200" Margin="0,0,0,10">
+                            <ListView.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Delete" Click="DeleteLogFileMenuItem_Click"/>
+                                    <MenuItem Header="Open Location" Click="OpenLogLocationMenuItem_Click"/>
+                                </ContextMenu>
+                            </ListView.ContextMenu>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="File Name" DisplayMemberBinding="{Binding FileName}" Width="120"/>
+                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="70"/>
+                                    <GridViewColumn Header="Last Modified" DisplayMemberBinding="{Binding LastModified, StringFormat={}{0:dd-MM-yyyy HH:mm}}" Width="140"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </StackPanel>
                 </Grid>
             </TabItem>
             <TabItem Header="Statistics">

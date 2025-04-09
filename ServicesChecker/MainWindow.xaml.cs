@@ -6,28 +6,42 @@ using System.Windows.Data;
 using System.Windows.Threading;
 using Docker.DotNet.Models;
 using ServicesChecker.utils;
+using Microsoft.Win32;
+using System.Diagnostics;
+using System.IO;
 
 namespace ServicesChecker
 {
     public partial class MainWindow : Window
     {
         private ObservableCollection<ServiceStatus> serviceStatuses;
+        private ObservableCollection<LogFileInfo> logFiles;
         private DispatcherTimer timer;
         private DockerManager dockerManager;
         private ServiceManager serviceManager;
+        private LogManager logManager;
         private string currentContainer = null;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Initialize services manager
             serviceManager = new ServiceManager();
             serviceStatuses = serviceManager.LoadServiceStatuses();
             ServiceStatusListView.ItemsSource = serviceStatuses;
+
+            // Initialize log files manager
+            logManager = new LogManager();
+            logFiles = logManager.LoadLogFiles();
+            LogFilesListView.ItemsSource = logFiles;
+
             StartServiceCheckTimer();
             AddSorting();
             InitializeDockerManager();
         }
 
+        #region Services Tab Methods
         private void InitializeDockerManager()
         {
             dockerManager = new DockerManager();
@@ -65,7 +79,6 @@ namespace ServicesChecker
                 DockerContainerComboBox.SelectedItem = selectedItem;
             }
         }
-
 
         private async void AddServiceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -126,9 +139,14 @@ namespace ServicesChecker
 
         private void AddSorting()
         {
-            ICollectionView collectionView = CollectionViewSource.GetDefaultView(serviceStatuses);
-            collectionView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
-            collectionView.SortDescriptions.Add(new SortDescription("Status", ListSortDirection.Ascending));
+            // Services sorting
+            ICollectionView servicesView = CollectionViewSource.GetDefaultView(serviceStatuses);
+            servicesView.SortDescriptions.Add(new SortDescription("Name", ListSortDirection.Ascending));
+            servicesView.SortDescriptions.Add(new SortDescription("Status", ListSortDirection.Ascending));
+
+            // Log files sorting
+            ICollectionView logFilesView = CollectionViewSource.GetDefaultView(logFiles);
+            logFilesView.SortDescriptions.Add(new SortDescription("FileName", ListSortDirection.Ascending));
         }
 
         private async void ChangeServiceStatusMenuItem_Click(object sender, RoutedEventArgs e)
@@ -186,8 +204,6 @@ namespace ServicesChecker
             });
         }
 
-        
-
         private async void DockerContainerComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (DockerContainerComboBox.SelectedItem is ComboBoxItem selectedItem)
@@ -226,6 +242,74 @@ namespace ServicesChecker
                 currentContainer = selectedContainer;
             }
         }
+        #endregion
 
+        #region Configuration Tab Methods
+        private void BrowseLogFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "Log Files (*.log)|*.log|Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                Title = "Select Log Files",
+                Multiselect = true // Allow multiple file selection
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                foreach (var filePath in openFileDialog.FileNames)
+                {
+                    if (!logManager.LogFileExists(logFiles, filePath))
+                    {
+                        logManager.AddLogFile(logFiles, filePath);
+                    }
+                }
+                LogFilesListView.Items.Refresh(); // Refresh the list view to show the added files
+            }
+        }
+
+        private void AddLogFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            string logFilePath = LogFilePathTextBox.Text.Trim();
+
+            if (!string.IsNullOrWhiteSpace(logFilePath))
+            {
+                logManager.AddLogFile(logFiles, logFilePath);
+                LogFilePathTextBox.Clear();
+                LogFilesListView.Items.Refresh();
+            }
+        }
+
+        private async void DeleteLogFileMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (LogFilesListView.SelectedItem is LogFileInfo selectedLogFile)
+            {
+                var result = MessageBox.Show(
+                    $"Are you sure you want to delete the file '{selectedLogFile.FileName}'?\nThis will permanently remove the file from disk.",
+                    "Confirm Deletion",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    if (await logManager.DeleteLogFileAsync(logFiles, selectedLogFile))
+                    {
+                        MessageBox.Show("File successfully deleted.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                        LogFilesListView.Items.Refresh();
+                    }
+                }
+            }
+        }
+
+        private void OpenLogLocationMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (LogFilesListView.SelectedItem is LogFileInfo selectedLogFile &&
+                File.Exists(selectedLogFile.FilePath))
+            {
+                // Open the file's directory in Windows Explorer and select the file
+                string argument = $"/select, \"{selectedLogFile.FilePath}\"";
+                Process.Start("explorer.exe", argument);
+            }
+        }
+        #endregion
     }
 }
