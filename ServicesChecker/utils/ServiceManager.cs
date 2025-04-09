@@ -155,5 +155,32 @@ namespace ServicesChecker.utils
                 throw new InvalidOperationException($"Failed to change service status: {ex.Message}", ex);
             }
         }
+
+        public async Task RestartLocalServiceAsync(string serviceName)
+        {
+            try
+            {
+                using (ServiceController serviceController = new ServiceController(serviceName))
+                {
+                    // Stop the service if it's running
+                    if (serviceController.Status == ServiceControllerStatus.Running)
+                    {
+                        serviceController.Stop();
+                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Stopped));
+                    }
+                    
+                    // Start the service once it's stopped
+                    if (serviceController.Status == ServiceControllerStatus.Stopped)
+                    {
+                        serviceController.Start();
+                        await Task.Run(() => serviceController.WaitForStatus(ServiceControllerStatus.Running));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to restart service: {ex.Message}", ex);
+            }
+        }
     }
 }

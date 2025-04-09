@@ -165,20 +165,53 @@ namespace ServicesChecker
             }
         }
 
+        private async void RestartServiceMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService && !selectedService.IsRestService)
+            {
+                try
+                {
+                    await serviceManager.RestartLocalServiceAsync(selectedService.Name);
+                    serviceManager.SaveServiceStatuses(serviceStatuses);
+                    await UpdateServiceStatuses();
+                    ServiceStatusListView.Items.Refresh();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"Error restarting service: {ex.Message}",
+                        "Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+        }
+
         private void ServiceStatusListView_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
             {
-                // Find the context menu and the specific menu item
+                // Find the context menu and the specific menu items
                 ContextMenu contextMenu = ServiceStatusListView.ContextMenu;
+
                 MenuItem changeStatusMenuItem = contextMenu.Items
                     .OfType<MenuItem>()
                     .FirstOrDefault(item => item.Header.ToString() == "Change status");
+
+                MenuItem restartMenuItem = contextMenu.Items
+                    .OfType<MenuItem>()
+                    .FirstOrDefault(item => item.Header.ToString() == "Restart");
 
                 if (changeStatusMenuItem != null)
                 {
                     // Set visibility based on whether the service is a REST service or not
                     changeStatusMenuItem.Visibility = selectedService.IsRestService ? Visibility.Collapsed : Visibility.Visible;
+                }
+
+                if (restartMenuItem != null)
+                {
+                    // Only show restart option for local services
+                    restartMenuItem.Visibility = selectedService.IsRestService ? Visibility.Collapsed : Visibility.Visible;
                 }
             }
         }
