@@ -74,23 +74,12 @@ jobs:
         name: ServicesChecker-ZIP
 
     - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+      uses: softprops/action-gh-release@v1
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: v${{ env.VERSION }}
-        release_name: "ServicesChecker v${{ env.VERSION }}"
+        name: "ServicesChecker v${{ env.VERSION }}"
         body: "Release of ServicesChecker application."
+        files: ServicesChecker.zip
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ServicesChecker.zip
-        asset_name: ServicesChecker.zip
-        asset_content_type: application/zip
