@@ -1,0 +1,51 @@
+name: Build ServicesChecker Application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+        
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: ServicesChecker.sln
+      Project_Path: ServicesChecker/ServicesChecker.csproj
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.Project_Path }}
+
+    - name: Build application
+      run: dotnet build ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --no-restore
+
+    # Optional: Run tests if you have any
+    # - name: Run tests
+    #   run: dotnet test --configuration ${{ matrix.configuration }} --no-build
+
+    - name: Publish application
+      if: matrix.configuration == 'Release'
+      run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --output ./publish --self-contained true -r win-x64 /p:PublishSingleFile=true
+
+    - name: Upload build artifacts
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ServicesChecker-${{ matrix.configuration }}
+        path: ./publish
