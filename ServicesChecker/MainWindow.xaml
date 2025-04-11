@@ -45,9 +45,30 @@
                               ItemsSource="{Binding ServiceStatuses}">
                         <ListView.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="🔀 Change status" Click="ChangeServiceStatusMenuItem_Click"/>
-                                <MenuItem Header="🔄️ Restart" Click="RestartServiceMenuItem_Click"/>
-                                <MenuItem Header="❎ Delete" Click="DeleteMenuItem_Click"/>
+                                <MenuItem Click="ChangeServiceStatusMenuItem_Click">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🔀" Foreground="Blue" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Change status"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                                <MenuItem Click="RestartServiceMenuItem_Click">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="🔄️" Foreground="Green" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Restart"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
+                                <MenuItem Click="DeleteMenuItem_Click">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="❎" Foreground="Red" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Delete"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
                             </ContextMenu>
                         </ListView.ContextMenu>
                         <ListView.View>
