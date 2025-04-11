@@ -52,6 +52,15 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Extract version from .csproj
+      id: extract_version
+      run: |
+        VERSION=$(xmllint --xpath "string(//Project/PropertyGroup/Version)" ServicesChecker/ServicesChecker.csproj)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
     - name: Download build artifacts
       uses: actions/download-artifact@v4
       with:
@@ -62,8 +71,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v1.0.0
-        release_name: "ServicesChecker v1.0.0"
+        tag_name: ${{ env.VERSION }}
+        release_name: "ServicesChecker v${{ env.VERSION }}"
         body: "Release of ServicesChecker application."
         draft: false
         prerelease: false
