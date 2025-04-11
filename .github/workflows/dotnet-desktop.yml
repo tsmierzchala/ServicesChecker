@@ -1,4 +1,4 @@
-name: Build ServicesChecker Application
+name: Build and Release ServicesChecker Application
 
 on:
   push:
@@ -35,10 +35,6 @@ jobs:
     - name: Build application
       run: dotnet build ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --no-restore
 
-    # Optional: Run tests if you have any
-    # - name: Run tests
-    #   run: dotnet test --configuration ${{ matrix.configuration }} --no-build
-
     - name: Publish application
       if: matrix.configuration == 'Release'
       run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} --output ./publish --self-contained true -r win-x64 /p:PublishSingleFile=true
@@ -49,3 +45,35 @@ jobs:
       with:
         name: ServicesChecker-${{ matrix.configuration }}
         path: ./publish
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ServicesChecker-Release
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v1.0.0
+        release_name: "ServicesChecker v1.0.0"
+        body: "Release of ServicesChecker application."
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create-release.outputs.upload_url }}
+        asset_path: ./publish
+        asset_name: ServicesChecker.zip
+        asset_content_type: application/zip
