@@ -58,7 +58,7 @@ jobs:
     - name: Extract version from .csproj
       id: extract_version
       run: |
-        VERSION=$(xmllint --xpath "string(//Project/PropertyGroup/Version)" ServicesChecker/ServicesChecker.csproj)
+        VERSION=$(dotnet msbuild ServicesChecker/ServicesChecker.csproj -nologo -t:GetVersion -v:q -property:TargetFramework=net8.0-windows | tail -n 1)
         echo "VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Download build artifacts
@@ -86,3 +86,4 @@ jobs:
         asset_path: ./publish
         asset_name: ServicesChecker.zip
         asset_content_type: application/zip
+
