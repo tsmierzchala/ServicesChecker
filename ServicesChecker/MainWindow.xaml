@@ -48,6 +48,14 @@
                               ItemsSource="{Binding ServiceStatuses}">
                         <ListView.ContextMenu>
                             <ContextMenu>
+                                <MenuItem Click="CopyVersionMenuItem_Click">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="📋" Foreground="Purple" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Copy Version"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
                                 <MenuItem Click="ChangeServiceStatusMenuItem_Click">
                                     <MenuItem.Header>
                                         <StackPanel Orientation="Horizontal">

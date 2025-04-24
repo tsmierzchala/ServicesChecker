@@ -282,6 +282,16 @@ namespace ServicesChecker
                 currentContainer = selectedContainer;
             }
         }
+
+        private void CopyVersionMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
+            {
+                // Get the version and copy it to the clipboard
+                string version = selectedService.Version ?? "N/A";
+                Clipboard.SetText(version);
+            }
+        }
         #endregion
 
         #region Configuration Tab Methods
