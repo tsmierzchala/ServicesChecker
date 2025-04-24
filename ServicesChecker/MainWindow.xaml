@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:ServicesChecker"
         mc:Ignorable="d"
         Title="Services Checker" 
-        Width="350"
+        Width="450"
         MinHeight="200"
-        MaxWidth="350"
-        MinWidth="350"
+        MaxWidth="450"
+        MinWidth="450"
         SizeToContent="Height"
         >
 
@@ -29,7 +29,7 @@
                      Visibility="Collapsed" 
                      HorizontalAlignment="Center" 
                      VerticalAlignment="Center" 
-                     Width="328" Height="30" Margin="10"/>
+                     Width="428" Height="30" Margin="10"/>
                     <TextBlock x:Name="LoadingStatusTextBlock" 
                        Visibility="Collapsed" 
                        HorizontalAlignment="Center" 
@@ -73,7 +73,7 @@
                         </ListView.ContextMenu>
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="150"/>
+                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="200"/>
                                 <GridViewColumn Header="Status" Width="80">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -84,7 +84,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="65"/>
+                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="115"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -111,7 +111,7 @@
                             </ListView.ContextMenu>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="File Name" Width="200">
+                                    <GridViewColumn Header="File Name" Width="250">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
@@ -121,7 +121,7 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="95"/>
+                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="145"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>
