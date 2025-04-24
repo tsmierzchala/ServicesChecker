@@ -402,6 +402,26 @@ namespace ServicesChecker
             };
             logFileMonitorTimer.Start();
         }
+
+        private void OpenDownloadsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Get the default downloads folder path
+                string downloadsPath = @"D:\Aplikacje\Temp\";
+
+                // Open file explorer at the downloads location
+                Process.Start("explorer.exe", downloadsPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error opening downloads folder: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
         #endregion
     }
 }

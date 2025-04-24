@@ -24,8 +24,9 @@
                         <TextBox x:Name="ServiceNameTextBox" Width="200"/>
                         <CheckBox x:Name="IsConnectingToDBCheckBox" Content="Is Connecting to DB" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="400" Margin="10" HorizontalAlignment="Left"/>
+                    <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="423" Margin="10" HorizontalAlignment="Left"/>
                     <Button x:Name="GetAppsButton" Content="Get Apps" Click="GetAppsButton_Click" Height="30" Margin="10"/>
+                    <Button x:Name="OpenDownloadsButton" Content="Open Catalog" Click="OpenDownloadsButton_Click" Height="30" Margin="10,-40,10,40" HorizontalAlignment="Right" Width="111"/>
                     <ProgressBar x:Name="LoadingProgressBar" 
                      IsIndeterminate="True" 
                      Visibility="Collapsed" 
