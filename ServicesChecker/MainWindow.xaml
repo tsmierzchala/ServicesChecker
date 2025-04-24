@@ -6,10 +6,10 @@
         xmlns:local="clr-namespace:ServicesChecker"
         mc:Ignorable="d"
         Title="Services Checker" 
-        Width="350"
+        Width="450"
         MinHeight="200"
-        MaxWidth="350"
-        MinWidth="350"
+        MaxWidth="450"
+        MinWidth="450"
         SizeToContent="Height"
         >
 
@@ -20,16 +20,19 @@
         <TabControl>
             <TabItem Header="Services">
                 <StackPanel>
-                    <TextBox x:Name="ServiceNameTextBox" Width="200" Margin="10,10,10,0"/>
-                    <CheckBox x:Name="IsConnectingToDBCheckBox" Content="Is Connecting to DB" Margin="100,0,100,0"/>
-                    <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="200" Margin="10"/>
+                    <StackPanel Orientation="Horizontal" Margin="10,10,10,0">
+                        <TextBox x:Name="ServiceNameTextBox" Width="200"/>
+                        <CheckBox x:Name="IsConnectingToDBCheckBox" Content="Is Connecting to DB" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button x:Name="AddServiceButton" Content="Add Service" Click="AddServiceButton_Click" Width="423" Margin="10" HorizontalAlignment="Left"/>
                     <Button x:Name="GetAppsButton" Content="Get Apps" Click="GetAppsButton_Click" Height="30" Margin="10"/>
+                    <Button x:Name="OpenDownloadsButton" Content="Open Catalog" Click="OpenDownloadsButton_Click" Height="30" Margin="10,-40,10,40" HorizontalAlignment="Right" Width="111"/>
                     <ProgressBar x:Name="LoadingProgressBar" 
                      IsIndeterminate="True" 
                      Visibility="Collapsed" 
                      HorizontalAlignment="Center" 
                      VerticalAlignment="Center" 
-                     Width="328" Height="30" Margin="10"/>
+                     Width="428" Height="30" Margin="10"/>
                     <TextBlock x:Name="LoadingStatusTextBlock" 
                        Visibility="Collapsed" 
                        HorizontalAlignment="Center" 
@@ -45,6 +48,14 @@
                               ItemsSource="{Binding ServiceStatuses}">
                         <ListView.ContextMenu>
                             <ContextMenu>
+                                <MenuItem Click="CopyVersionMenuItem_Click">
+                                    <MenuItem.Header>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="📋" Foreground="Purple" Margin="0,0,5,0"/>
+                                            <TextBlock Text="Copy Version"/>
+                                        </StackPanel>
+                                    </MenuItem.Header>
+                                </MenuItem>
                                 <MenuItem Click="ChangeServiceStatusMenuItem_Click">
                                     <MenuItem.Header>
                                         <StackPanel Orientation="Horizontal">
@@ -73,7 +84,7 @@
                         </ListView.ContextMenu>
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="150"/>
+                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="200"/>
                                 <GridViewColumn Header="Status" Width="80">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
@@ -84,7 +95,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="65"/>
+                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="115"/>
                             </GridView>
                         </ListView.View>
                     </ListView>
@@ -111,7 +122,7 @@
                             </ListView.ContextMenu>
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="File Name" Width="200">
+                                    <GridViewColumn Header="File Name" Width="250">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
@@ -121,7 +132,7 @@
                                             </DataTemplate>
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="95"/>
+                                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding FileSize}" Width="145"/>
                                 </GridView>
                             </ListView.View>
                         </ListView>

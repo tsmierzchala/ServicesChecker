@@ -282,6 +282,16 @@ namespace ServicesChecker
                 currentContainer = selectedContainer;
             }
         }
+
+        private void CopyVersionMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
+            {
+                // Get the version and copy it to the clipboard
+                string version = selectedService.Version ?? "N/A";
+                Clipboard.SetText(version);
+            }
+        }
         #endregion
 
         #region Configuration Tab Methods
@@ -401,6 +411,26 @@ namespace ServicesChecker
                 LogFilesListView.Items.Refresh();
             };
             logFileMonitorTimer.Start();
+        }
+
+        private void OpenDownloadsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Get the default downloads folder path
+                string downloadsPath = @"D:\Aplikacje\Temp\";
+
+                // Open file explorer at the downloads location
+                Process.Start("explorer.exe", downloadsPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Error opening downloads folder: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
         }
         #endregion
     }
