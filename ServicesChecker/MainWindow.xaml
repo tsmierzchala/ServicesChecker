@@ -73,8 +73,8 @@
                         </ListView.ContextMenu>
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="200"/>
-                                <GridViewColumn Header="Status" Width="95">
+                                <GridViewColumn Header="Service Name" DisplayMemberBinding="{Binding Name, Converter={StaticResource UrlShortenerConverter}}" Width="150"/>
+                                <GridViewColumn Header="Status" Width="80">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal">
@@ -84,6 +84,7 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
+                                <GridViewColumn Header="Version" DisplayMemberBinding="{Binding Version}" Width="65"/>
                             </GridView>
                         </ListView.View>
                     </ListView>

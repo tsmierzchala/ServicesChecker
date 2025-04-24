@@ -9,5 +9,6 @@ namespace ServicesChecker
         public Brush StatusColor => Status.Contains("Running") || Status.Contains("Available") ? Brushes.Green : Brushes.Red;
         public bool IsRestService { get; set; }
         public bool IsConnectingToDB { get; set; }
+        public string? Version { get; set; }
     }
 }

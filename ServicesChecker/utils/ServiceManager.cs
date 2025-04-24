@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Management;
 using System.Net.Http;
 using System.ServiceProcess;
 using Newtonsoft.Json;
@@ -103,12 +105,20 @@ namespace ServicesChecker.utils
 
         public void AddService(ObservableCollection<ServiceStatus> serviceStatuses, string serviceName, bool isRestService, string status, bool isConnectingToDB)
         {
+            string version = "N/A";
+            if (!isRestService)
+            {
+                // Only get version for local services
+                version = GetLocalServiceVersion(serviceName);
+            }
+
             serviceStatuses.Add(new ServiceStatus
             {
                 Name = serviceName,
                 Status = status,
                 IsRestService = isRestService,
-                IsConnectingToDB = isConnectingToDB
+                IsConnectingToDB = isConnectingToDB,
+                Version = version
             });
             SaveServiceStatuses(serviceStatuses);
         }
@@ -181,6 +191,75 @@ namespace ServicesChecker.utils
             {
                 throw new InvalidOperationException($"Failed to restart service: {ex.Message}", ex);
             }
+        }
+
+        public string GetLocalServiceVersion(string serviceName)
+        {
+            try
+            {
+                // Get the service executable path
+                string servicePath = GetServiceExecutablePath(serviceName);
+                
+                if (!string.IsNullOrEmpty(servicePath) && File.Exists(servicePath))
+                {
+                    // Get the version info from the executable
+                    FileVersionInfo versionInfo = FileVersionInfo.GetVersionInfo(servicePath);
+                    return versionInfo.FileVersion ?? "Unknown";
+                }
+            }
+            catch (Exception ex)
+            {
+                // If there's an error, return "Unknown"
+                System.Diagnostics.Debug.WriteLine($"Error getting version: {ex.Message}");
+            }
+            
+            return "Unknown";
+        }
+
+        private string GetServiceExecutablePath(string serviceName)
+        {
+            try
+            {
+                // Query Windows Management to get the service executable path
+                string wmiQuery = $"SELECT PathName FROM Win32_Service WHERE Name='{serviceName}'";
+                using (var searcher = new ManagementObjectSearcher(wmiQuery))
+                {
+                    using (var results = searcher.Get())
+                    {
+                        foreach (ManagementObject result in results)
+                        {
+                            string pathName = result["PathName"]?.ToString() ?? string.Empty;
+                            
+                            // Remove quotes if present
+                            if (pathName.StartsWith("\""))
+                            {
+                                int endQuoteIndex = pathName.IndexOf("\"", 1);
+                                if (endQuoteIndex > 0)
+                                {
+                                    pathName = pathName.Substring(1, endQuoteIndex - 1);
+                                }
+                            }
+                            else
+                            {
+                                // If no quotes, take everything before first space (if there are parameters)
+                                int spaceIndex = pathName.IndexOf(" ");
+                                if (spaceIndex > 0)
+                                {
+                                    pathName = pathName.Substring(0, spaceIndex);
+                                }
+                            }
+                            
+                            return pathName;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting service path: {ex.Message}");
+            }
+            
+            return string.Empty;
         }
     }
 }

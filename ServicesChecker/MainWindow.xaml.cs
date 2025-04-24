@@ -9,9 +9,6 @@ using ServicesChecker.utils;
 using Microsoft.Win32;
 using System.Diagnostics;
 using System.IO;
-using System.Windows.Media;
-using System.Globalization;
-using System.Linq;
 
 namespace ServicesChecker
 {
@@ -128,6 +125,11 @@ namespace ServicesChecker
                 else
                 {
                     service.Status = serviceManager.CheckLocalServiceStatus(service.Name);
+                    // Update version for local services
+                    if (string.IsNullOrEmpty(service.Version) || service.Version == "N/A" || service.Version == "Unknown")
+                    {
+                        service.Version = serviceManager.GetLocalServiceVersion(service.Name);
+                    }
                 }
             }
             ServiceStatusListView.Items.Refresh();
