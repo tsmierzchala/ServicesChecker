@@ -157,6 +157,78 @@
                                FontStyle="Italic" />
                 </Grid>
             </TabItem>
+            <!-- New Updates Tab -->
+            <TabItem Header="Updates">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Current Version Info -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                        <TextBlock Text="Current Version:" FontWeight="Bold"/>
+                        <TextBlock x:Name="CurrentVersionTextBlock" Text="1.0.0" Margin="5,0,0,0"/>
+                    </StackPanel>
+                    
+                    <!-- Latest Version Info -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                        <TextBlock Text="Latest Version:" FontWeight="Bold"/>
+                        <TextBlock x:Name="LatestVersionTextBlock" Text="Checking..." Margin="5,0,0,0"/>
+                    </StackPanel>
+                    
+                    <!-- Update Status -->
+                    <StackPanel Grid.Row="2" Margin="0,0,0,10">
+                        <TextBlock Text="Status:" FontWeight="Bold"/>
+                        <TextBlock x:Name="UpdateStatusTextBlock" Text="Checking for updates..." Margin="5,0,0,0"/>
+                    </StackPanel>
+                    
+                    <!-- Release Notes -->
+                    <GroupBox Grid.Row="3" Header="Release Notes" Margin="0,0,0,10">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock x:Name="ReleaseNotesTextBlock" 
+                                       TextWrapping="Wrap" 
+                                       Margin="5"/>
+                        </ScrollViewer>
+                    </GroupBox>
+                    
+                    <!-- Action Buttons -->
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button x:Name="CheckForUpdatesButton" 
+                                Content="Check for Updates" 
+                                Click="CheckForUpdatesButton_Click"
+                                Grid.Column="0" 
+                                Margin="0,0,5,0" 
+                                Height="30"/>
+                        
+                        <Grid Grid.Column="1" Margin="5,0,0,0">
+                            <Button x:Name="DownloadUpdateButton" 
+                                    Content="Download Update" 
+                                    Click="DownloadUpdateButton_Click" 
+                                    Height="30"
+                                    Visibility="Collapsed"/>
+                            
+                            <Button x:Name="InstallUpdateButton" 
+                                    Content="Install Update" 
+                                    Click="InstallUpdateButton_Click" 
+                                    Height="30"
+                                    Visibility="Collapsed"/>
+                            
+                            <ProgressBar x:Name="DownloadProgressBar" 
+                                        Height="30" 
+                                        Visibility="Collapsed"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

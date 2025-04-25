@@ -21,6 +21,9 @@ namespace ServicesChecker
         private DockerManager dockerManager;
         private ServiceManager serviceManager;
         private LogManager logManager;
+        private UpdaterService updaterService;
+        private ReleaseInfo latestRelease;
+        private string downloadedUpdatePath;
         private string currentContainer = null;
 
         public MainWindow()
@@ -41,6 +44,7 @@ namespace ServicesChecker
             StartLogFileMonitorTimer();
             AddSorting();
             InitializeDockerManager();
+            InitializeUpdater();
         }
 
         #region Services Tab Methods
@@ -430,6 +434,134 @@ namespace ServicesChecker
                     "Error",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+            }
+        }
+        #endregion
+
+        #region Updates Tab Methods
+        private void InitializeUpdater()
+        {
+            var settings = AppSettings.Instance;
+            updaterService = new UpdaterService(settings.GitHubOwner, settings.GitHubRepo);
+            
+            // Show current version
+            CurrentVersionTextBlock.Text = updaterService.CurrentVersion;
+            
+            // Check for updates on startup if enabled
+            if (settings.CheckForUpdatesOnStartup)
+            {
+                CheckForUpdatesAsync();
+            }
+        }
+
+        private async void CheckForUpdatesButton_Click(object sender, RoutedEventArgs e)
+        {
+            await CheckForUpdatesAsync();
+        }
+
+        private async Task CheckForUpdatesAsync()
+        {
+            try
+            {
+                CheckForUpdatesButton.IsEnabled = false;
+                DownloadUpdateButton.Visibility = Visibility.Collapsed;
+                InstallUpdateButton.Visibility = Visibility.Collapsed;
+                
+                UpdateStatusTextBlock.Text = "Checking for updates...";
+                
+                latestRelease = await updaterService.CheckForUpdatesAsync();
+                
+                if (latestRelease != null)
+                {
+                    LatestVersionTextBlock.Text = latestRelease.Version;
+                    ReleaseNotesTextBlock.Text = latestRelease.Description;
+                    UpdateStatusTextBlock.Text = $"Update available: {latestRelease.Version}";
+                    DownloadUpdateButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    LatestVersionTextBlock.Text = "No updates available";
+                    UpdateStatusTextBlock.Text = "You are running the latest version";
+                    ReleaseNotesTextBlock.Text = "No new release notes available.";
+                }
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusTextBlock.Text = $"Error checking for updates: {ex.Message}";
+                MessageBox.Show($"Error checking for updates: {ex.Message}", "Update Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                CheckForUpdatesButton.IsEnabled = true;
+            }
+        }
+
+        private async void DownloadUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (latestRelease == null || string.IsNullOrEmpty(latestRelease.DownloadUrl))
+            {
+                MessageBox.Show("No update available to download.", "Update", 
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            
+            try
+            {
+                // Disable buttons during download
+                DownloadUpdateButton.Visibility = Visibility.Collapsed;
+                CheckForUpdatesButton.IsEnabled = false;
+                
+                // Show progress bar
+                DownloadProgressBar.Visibility = Visibility.Visible;
+                DownloadProgressBar.Value = 0;
+                
+                // Update status
+                UpdateStatusTextBlock.Text = "Downloading update...";
+                
+                // Download the update
+                downloadedUpdatePath = await updaterService.DownloadUpdateAsync(
+                    latestRelease.DownloadUrl, 
+                    progress => Dispatcher.Invoke(() => DownloadProgressBar.Value = progress)
+                );
+                
+                // Update status and show install button
+                UpdateStatusTextBlock.Text = "Download complete. Ready to install.";
+                InstallUpdateButton.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusTextBlock.Text = $"Error downloading update: {ex.Message}";
+                MessageBox.Show($"Error downloading update: {ex.Message}", "Download Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                CheckForUpdatesButton.IsEnabled = true;
+                DownloadProgressBar.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void InstallUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(downloadedUpdatePath) || !File.Exists(downloadedUpdatePath))
+            {
+                MessageBox.Show("Update file not found. Please download the update again.", 
+                    "Update Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
+            try
+            {
+                UpdateStatusTextBlock.Text = "Installing update...";
+                updaterService.InstallUpdate(downloadedUpdatePath);
+                // The application will be restarted by the updater if successful
+            }
+            catch (Exception ex)
+            {
+                UpdateStatusTextBlock.Text = $"Error installing update: {ex.Message}";
+                MessageBox.Show($"Error installing update: {ex.Message}", "Install Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         #endregion
