@@ -125,11 +125,8 @@ namespace ServicesChecker
                 else
                 {
                     service.Status = serviceManager.CheckLocalServiceStatus(service.Name);
-                    // Update version for local services
-                    if (string.IsNullOrEmpty(service.Version) || service.Version == "N/A" || service.Version == "Unknown")
-                    {
-                        service.Version = serviceManager.GetLocalServiceVersion(service.Name);
-                    }
+                    // Update version for local services every time status is checked
+                    service.Version = serviceManager.GetLocalServiceVersion(service.Name);
                 }
             }
             ServiceStatusListView.Items.Refresh();
