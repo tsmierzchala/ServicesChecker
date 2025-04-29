@@ -136,8 +136,18 @@ namespace ServicesChecker
         {
             if (ServiceStatusListView.SelectedItem is ServiceStatus selectedService)
             {
-                serviceStatuses.Remove(selectedService);
-                serviceManager.SaveServiceStatuses(serviceStatuses);
+                // Show confirmation dialog before deletion
+                var result = MessageBox.Show(
+                    $"Are you sure you want to delete the service '{selectedService.Name}'?",
+                    "Confirm Deletion",
+                    MessageBoxButton.YesNo, 
+                    MessageBoxImage.Question);
+                
+                if (result == MessageBoxResult.Yes)
+                {
+                    serviceStatuses.Remove(selectedService);
+                    serviceManager.SaveServiceStatuses(serviceStatuses);
+                }
             }
         }
 
