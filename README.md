@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/tsmierzchala/ServicesChecker/actions/workflows/dotnet-desktop.yml/badge.svg)
 
-A Windows desktop application for monitoring and managing Windows services, Docker containers, and log files. Built with .NET 8 and WPF.
+A Windows desktop application for monitoring and managing Windows services, Docker containers, and log files. Built with .NET 9 and WPF.
 
 ## Overview
 
@@ -36,7 +36,7 @@ ServicesChecker is a utility tool designed to simplify the management of local W
 ## System Requirements
 
 - Windows 10/11 or Windows Server 2016 or newer
-- .NET 8.0 Runtime
+- .NET 9.0 Runtime
 - Docker Desktop (for Docker container features)
 
 ## Installation
